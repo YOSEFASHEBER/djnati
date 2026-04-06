@@ -1,0 +1,12 @@
+.nav {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  background-color: red;
+}
+
+.ul {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
