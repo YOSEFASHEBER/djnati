@@ -3,6 +3,7 @@ const nextConfig = {
   images: {
     domains: [
       "images.unsplash.com",
+      "encrypted-tbn0.gstatic.com",
       "share.google.com", // your Google-hosted images
       "cdn.prod.website-files.com",
       "www.mansory.com",

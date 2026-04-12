@@ -1,13 +1,15 @@
 //
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Hero() {
   return (
     <div className="relative h-screen w-full overflow-hidden">
+      {/* // https://images.unsplash.com/photo-1552519507-da3b142c6e3d */}
       {/* Background Image */}
       <div className="absolute inset-0">
         <Image
-          src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d"
+          src="https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=2025&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
           alt="Cars"
           fill
           priority
@@ -34,13 +36,16 @@ export default function Hero() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <button className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 font-bold rounded-lg transition">
-              Browse Cars
-            </button>
-
-            <button className="bg-white/80 hover:bg-white text-black px-8 py-3 font-bold rounded-lg transition">
-              Contact Seller
-            </button>
+            <Link href="/cars">
+              <button className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 font-bold rounded-lg transition">
+                Browse Cars
+              </button>
+            </Link>
+            <Link href="/contact">
+              <button className="bg-white/80 hover:bg-white text-black px-8 py-3 font-bold rounded-lg transition">
+                Contact Seller
+              </button>
+            </Link>
           </div>
         </div>
       </div>
