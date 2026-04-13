@@ -1,4 +1,3 @@
-//
 "use client";
 
 import { useEffect, useState } from "react";
@@ -37,20 +36,26 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="bg-white text-slate-900 overflow-x-hidden">
+    <main
+      className="bg-white text-slate-900 overflow-x-hidden pt-20"
+      role="main"
+    >
       {/* ================= HERO ================= */}
-      <section className="relative h-[90vh] w-full overflow-hidden">
+      <section
+        className="relative h-[90vh] w-full overflow-hidden"
+        aria-label="Hero section showing car dealership in Addis Ababa"
+      >
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2025&auto=format&fit=crop"
-            alt="Cars"
+            alt="Cars for sale in Addis Ababa"
             fill
             priority
             className="object-cover scale-105"
           />
 
-          {/* Gradient overlay */}
+          {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         </div>
 
@@ -66,8 +71,8 @@ export default function Home() {
             </h1>
 
             <p className="text-gray-200 text-base sm:text-lg">
-              Quality new and used cars you can trust in Addis Ababa with
-              transparent pricing and verified condition.
+              Quality new and used cars in Addis Ababa with transparent pricing
+              and verified condition.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
@@ -111,7 +116,10 @@ export default function Home() {
       </section>
 
       {/* ================= LATEST CARS ================= */}
-      <section className="py-16 bg-gradient-to-br from-white via-red-50 to-white px-4 sm:px-6 lg:px-8">
+      <section
+        className="py-16 bg-gradient-to-br from-white via-red-50 to-white px-4 sm:px-6 lg:px-8"
+        aria-label="Latest cars available for sale"
+      >
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex justify-between items-end mb-10">
@@ -121,7 +129,7 @@ export default function Home() {
               </span>
 
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-                Recently Added Cars
+                Recently Added Cars in Addis Ababa
               </h2>
             </div>
 

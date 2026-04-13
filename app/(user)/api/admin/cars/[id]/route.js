@@ -1,5 +1,5 @@
-import { connectDB } from "@/app/lib/mongodb";
-import Car from "@/app/lib/Car.model";
+import { connectDB } from "@/app/(user)/lib/mongodb";
+import Car from "@/app/(user)/lib/Car.model";
 
 export async function PUT(req, { params }) {
   await connectDB();
