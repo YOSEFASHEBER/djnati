@@ -1,14 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-export default function EditCarPage() {
-  const { id } = useParams();
+export default function EditCarPage({ params }) {
   const router = useRouter();
-
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -19,240 +15,260 @@ export default function EditCarPage() {
     fuelType: "Petrol",
     transmission: "Manual",
     mileage: "",
-    status: "Available",
     description: "",
     images: [],
+    isAvailable: true,
   });
 
-  /* ================= FETCH CAR ================= */
-  const fetchCar = async () => {
-    try {
-      setLoading(true);
+  const [loading, setLoading] = useState(true);
+  const [preview, setPreview] = useState([]);
 
-      const res = await fetch(`/api/cars/${id}`, {
-        cache: "no-store",
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setForm({
-          ...data.data,
-          images: data.data.images || [],
-        });
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // ================= LOAD CAR =================
   useEffect(() => {
-    fetchCar();
-  }, [id]);
+    const fetchCar = async () => {
+      try {
+        const res = await fetch(`/api/admin/cars/${params.id}`);
+        const data = await res.json();
 
-  /* ================= HANDLERS ================= */
+        const car = data.data;
+
+        if (car) {
+          setForm({
+            name: car.name || "",
+            brand: car.brand || "",
+            category: car.category || "Sedan",
+            price: car.price || "",
+            year: car.year || "",
+            fuelType: car.fuelType || "Petrol",
+            transmission: car.transmission || "Manual",
+            mileage: car.mileage || "",
+            description: car.description || "",
+            images: [],
+            isAvailable: car.isAvailable ?? true,
+          });
+
+          if (car.images) {
+            setPreview(car.images);
+          }
+        }
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCar();
+  }, [params.id]);
+
+  // ================= HANDLE INPUT =================
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-
-    if (form.images.length + files.length > 10) {
-      alert("Maximum 10 images allowed");
-      return;
-    }
 
     setForm((prev) => ({
       ...prev,
-      images: [...prev.images, ...files],
+      [name]: value,
     }));
   };
 
-  const removeImage = (index) => {
-    const updated = [...form.images];
-    updated.splice(index, 1);
-    setForm({ ...form, images: updated });
+  // ================= IMAGES =================
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+
+    setForm((prev) => ({
+      ...prev,
+      images: files,
+    }));
+
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setPreview(previews);
   };
 
-  /* ================= SAVE (UI ONLY) ================= */
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
+  // ================= UPDATE =================
+  const updateCar = async () => {
+    const formData = new FormData();
 
-    console.log("UPDATED DATA:", form);
+    Object.keys(form).forEach((key) => {
+      if (key === "images") {
+        form.images.forEach((img) => {
+          formData.append("images", img);
+        });
+      } else {
+        formData.append(key, form[key]);
+      }
+    });
 
-    setTimeout(() => {
-      setSaving(false);
-      alert("Car updated (UI only)");
-      router.push("/admin/cars");
-    }, 700);
+    await fetch(`/api/cars/${params.id}`, {
+      method: "PUT",
+      body: formData,
+    });
+
+    alert("Car updated successfully!");
+    router.push("/admin/cars");
   };
 
-  if (loading) return <div className="p-6">Loading car data…</div>;
+  if (loading) return <p className="p-6">Loading car...</p>;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow">
-      <h1 className="text-3xl font-bold mb-6">Edit Car</h1>
+    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow border p-6 space-y-6">
+      <h1 className="text-3xl font-black">Edit Car</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* NAME + BRAND */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Car Name"
-            className="border p-3 rounded"
-          />
-
-          <input
-            name="brand"
-            value={form.brand}
-            onChange={handleChange}
-            placeholder="Brand"
-            className="border p-3 rounded"
-          />
-        </div>
-
-        {/* CATEGORY + YEAR */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className="border p-3 rounded"
-          >
-            <option>Sedan</option>
-            <option>SUV</option>
-            <option>Hatchback</option>
-            <option>Truck</option>
-          </select>
-
-          <input
-            name="year"
-            value={form.year}
-            onChange={handleChange}
-            type="number"
-            placeholder="Year"
-            className="border p-3 rounded"
-          />
-        </div>
-
-        {/* PRICE + MILEAGE */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            name="price"
-            value={form.price}
-            onChange={handleChange}
-            type="number"
-            placeholder="Price"
-            className="border p-3 rounded"
-          />
-
-          <input
-            name="mileage"
-            value={form.mileage}
-            onChange={handleChange}
-            type="number"
-            placeholder="Mileage"
-            className="border p-3 rounded"
-          />
-        </div>
-
-        {/* FUEL + TRANSMISSION */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <select
-            name="fuelType"
-            value={form.fuelType}
-            onChange={handleChange}
-            className="border p-3 rounded"
-          >
-            <option>Petrol</option>
-            <option>Diesel</option>
-            <option>Electric</option>
-            <option>Hybrid</option>
-          </select>
-
-          <select
-            name="transmission"
-            value={form.transmission}
-            onChange={handleChange}
-            className="border p-3 rounded"
-          >
-            <option>Manual</option>
-            <option>Automatic</option>
-          </select>
-        </div>
-
-        {/* STATUS */}
-        <div>
-          <label className="block font-semibold mb-1">Status</label>
-          <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-            className="border p-3 rounded w-full"
-          >
-            <option>Available</option>
-            <option>Sold</option>
-            <option>Reserved</option>
-          </select>
-        </div>
-
-        {/* DESCRIPTION */}
-        <textarea
-          name="description"
-          value={form.description}
+      {/* GRID 1 */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <input
+          name="name"
+          value={form.name}
           onChange={handleChange}
-          placeholder="Description"
-          className="border p-3 rounded w-full min-h-[120px]"
+          className="input"
+          placeholder="Car Name"
         />
 
-        {/* IMAGES */}
-        <div>
-          <label className="font-semibold">Images (Max 10)</label>
+        <input
+          name="brand"
+          value={form.brand}
+          onChange={handleChange}
+          className="input"
+          placeholder="Brand"
+        />
+      </div>
 
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            className="border p-3 rounded w-full mt-2"
-            onChange={handleImageChange}
-          />
+      {/* GRID 2 */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <select
+          name="category"
+          value={form.category}
+          onChange={handleChange}
+          className="input"
+        >
+          <option>Sedan</option>
+          <option>SUV</option>
+          <option>Hatchback</option>
+          <option>Truck</option>
+        </select>
 
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mt-3">
-            {form.images.map((img, i) => (
-              <div key={i} className="relative">
-                <img
-                  src={typeof img === "string" ? img : URL.createObjectURL(img)}
-                  className="h-20 w-full object-cover rounded"
-                />
+        <input
+          name="year"
+          value={form.year}
+          onChange={handleChange}
+          className="input"
+          placeholder="Year"
+        />
 
-                <button
-                  type="button"
-                  onClick={() => removeImage(i)}
-                  className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 rounded"
-                >
-                  ×
-                </button>
-              </div>
+        <input
+          name="mileage"
+          value={form.mileage}
+          onChange={handleChange}
+          className="input"
+          placeholder="Mileage"
+        />
+      </div>
+
+      {/* GRID 3 */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <input
+          name="price"
+          value={form.price}
+          onChange={handleChange}
+          className="input"
+          placeholder="Price"
+        />
+
+        <select
+          name="fuelType"
+          value={form.fuelType}
+          onChange={handleChange}
+          className="input"
+        >
+          <option>Petrol</option>
+          <option>Diesel</option>
+          <option>Electric</option>
+          <option>Hybrid</option>
+        </select>
+      </div>
+
+      {/* TRANSMISSION */}
+      <select
+        name="transmission"
+        value={form.transmission}
+        onChange={handleChange}
+        className="input"
+      >
+        <option>Manual</option>
+        <option>Automatic</option>
+      </select>
+
+      {/* DESCRIPTION */}
+      <textarea
+        name="description"
+        value={form.description}
+        onChange={handleChange}
+        className="input min-h-[140px]"
+        placeholder="Description"
+      />
+
+      {/* STATUS */}
+      <select
+        name="isAvailable"
+        value={form.status ? "true" : "false"}
+        onChange={(e) =>
+          setForm((prev) => ({
+            ...prev,
+            isAvailable: e.target.value === "true",
+          }))
+        }
+        className="input"
+      >
+        <option value="true">Available</option>
+        <option value="false">Sold</option>
+      </select>
+
+      {/* IMAGES */}
+      <div className="space-y-3">
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleImageChange}
+          className="input"
+        />
+
+        {/* PREVIEW */}
+        {preview.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {preview.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                className="h-24 w-full object-cover rounded-lg border"
+              />
             ))}
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* SAVE */}
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-black text-white px-6 py-3 rounded w-full md:w-auto"
-        >
-          {saving ? "Saving..." : "Update Car"}
-        </button>
-      </form>
+      {/* UPDATE BUTTON */}
+      <button
+        onClick={updateCar}
+        className="w-full bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600"
+      >
+        Update Car
+      </button>
+
+      {/* INPUT STYLE */}
+      <style jsx>{`
+        .input {
+          width: 100%;
+          padding: 12px;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          outline: none;
+        }
+
+        .input:focus {
+          border-color: #ef4444;
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+        }
+      `}</style>
     </div>
   );
 }
