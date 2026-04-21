@@ -80,7 +80,11 @@ export async function POST(req) {
           throw new Error("Cloudinary returned empty result");
         }
 
-        uploadedUrls.push(result.secure_url);
+        // uploadedUrls.push(result.secure_url);
+        uploadedUrls.push({
+          url: result.secure_url,
+          public_id: result.public_id,
+        });
         console.log(`✅ [STEP 7.${i}] URL added`);
       } catch (fileError) {
         console.log(`❌ FILE ${i} FAILED:`, fileError.message);

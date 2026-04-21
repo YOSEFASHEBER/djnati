@@ -1,89 +1,83 @@
-// export default function AdminLayout({ children }) {
-//   return (
-//     <div className="min-h-screen bg-gray-100 flex">
-//       {/* Sidebar */}
-//       <aside className="w-64 bg-black text-white p-6 space-y-6">
-//         <h1 className="text-2xl font-bold">Admin Panel</h1>
-
-//         <nav className="space-y-3">
-//           <a href="/admin" className="block hover:text-red-400">
-//             Dashboard
-//           </a>
-//           <a href="/admin/cars" className="block hover:text-red-400">
-//             Cars
-//           </a>
-//           <a href="/admin/cars/new" className="block hover:text-red-400">
-//             Add Car
-//           </a>
-//         </nav>
-//       </aside>
-
-//       {/* Main Content */}
-//       <main className="flex-1 p-6">{children}</main>
-//     </div>
-//   );
-// }
 "use client";
 
 import { useState } from "react";
-import "../../globals.css";
+import { LayoutDashboard, Car, PlusCircle, Menu, X } from "lucide-react";
+
 export default function AdminLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navItems = [
+    { label: "Dashboard", icon: LayoutDashboard, href: "/admin" },
+    { label: "Cars", icon: Car, href: "/admin/cars" },
+    { label: "Add Car", icon: PlusCircle, href: "/admin/cars/new" },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Top Navbar */}
-      <div className="h-16 bg-white shadow flex items-center justify-between px-4">
-        <h2 className="font-bold text-lg">Admin Dashboard</h2>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 flex flex-col">
+      {/* TOP BAR */}
+      <header className="h-16 bg-white/80 backdrop-blur-md border-b flex items-center justify-between px-4 shadow-sm">
+        <h1 className="font-bold text-lg text-slate-800">DJ NATI Admin</h1>
+
         <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="md:hidden bg-black text-white px-3 py-1 rounded"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="md:hidden p-2 rounded-lg bg-slate-900 text-white"
         >
-          ☰
+          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
-      </div>
+      </header>
 
       <div className="flex flex-1">
-        {/* Sidebar */}
+        {/* SIDEBAR (DESKTOP) */}
         <aside
-          className={`bg-black text-white transition-all duration-300 ${collapsed ? "w-20" : "w-64"} p-4 space-y-6 hidden md:block`}
+          className={`hidden md:flex flex-col transition-all duration-300
+          ${collapsed ? "w-20" : "w-64"}
+          bg-white/70 backdrop-blur-xl border-r shadow-lg`}
         >
+          {/* Toggle */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="bg-gray-800 text-white px-2 py-1 rounded w-full"
+            className="m-3 p-2 rounded-lg bg-slate-900 text-white hover:scale-105 transition"
           >
-            {collapsed ? ">" : "<"}
+            {collapsed ? "→" : "←"}
           </button>
 
-          <nav className="space-y-3 mt-4">
-            <a href="/admin" className="block hover:text-red-400">
-              {collapsed ? "🏠" : "Dashboard"}
-            </a>
-            <a href="/admin/cars" className="block hover:text-red-400">
-              {collapsed ? "🚗" : "Cars"}
-            </a>
-            <a href="/admin/cars/new" className="block hover:text-red-400">
-              {collapsed ? "➕" : "Add Car"}
-            </a>
+          {/* Nav */}
+          <nav className="flex flex-col gap-2 mt-2 px-2">
+            {navItems.map((item, i) => (
+              <a
+                key={i}
+                href={item.href}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-700 hover:bg-red-500 hover:text-white transition"
+              >
+                <item.icon size={18} />
+                {!collapsed && (
+                  <span className="text-sm font-medium">{item.label}</span>
+                )}
+              </a>
+            ))}
           </nav>
         </aside>
 
-        {/* Mobile Drawer */}
-        {collapsed && (
-          <div className="md:hidden bg-black text-white p-4 space-y-3">
-            <a href="/admin" className="block">
-              Dashboard
-            </a>
-            <a href="/admin/cars" className="block">
-              Cars
-            </a>
-            <a href="/admin/cars/new" className="block">
-              Add Car
-            </a>
+        {/* MOBILE DRAWER */}
+        {mobileOpen && (
+          <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b shadow-lg z-50">
+            <div className="p-4 flex flex-col gap-2">
+              {navItems.map((item, i) => (
+                <a
+                  key={i}
+                  href={item.href}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-red-500 hover:text-white transition"
+                >
+                  <item.icon size={18} />
+                  <span>{item.label}</span>
+                </a>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Content */}
+        {/* MAIN CONTENT */}
         <main className="flex-1 p-6 overflow-y-auto">{children}</main>
       </div>
     </div>

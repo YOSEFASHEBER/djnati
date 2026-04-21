@@ -19,7 +19,7 @@ export default function CarCard({ car }) {
       {/* Image */}
       <div className="relative h-48 sm:h-52 overflow-hidden">
         <Image
-          src={images[0] || "/placeholder.png"}
+          src={images[0]?.url || "/placeholder.png"}
           alt={name}
           fill
           className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
@@ -34,7 +34,11 @@ export default function CarCard({ car }) {
 
           <span
             className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full ${
-              status ? "bg-green-500 text-white" : "bg-gray-500 text-white"
+              status == "Available"
+                ? "bg-green-500 text-white"
+                : status == "Reserved"
+                  ? "bg-gray-500 text-white"
+                  : "bg-red-500 text-white"
             }`}
           >
             <BadgeCheck className="w-3 h-3" />
@@ -47,7 +51,9 @@ export default function CarCard({ car }) {
       <div className="p-4 flex flex-col gap-3">
         {/* Price */}
         <p className="text-red-500 text-xl font-extrabold">
-          {price ? `${price} ETB` : "Price not available"}
+          {price
+            ? `${car?.price?.toLocaleString()} ETB`
+            : "Price not available"}
         </p>
 
         {/* Button */}

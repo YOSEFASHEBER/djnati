@@ -10,6 +10,26 @@ const sanitize = (value) => {
   return value.trim();
 };
 
+// ================= GET CAR BY ID =================
+export async function GET(req, { params }) {
+  await connectDB();
+
+  try {
+    const car = await Car.findById(params.id);
+
+    if (!car) {
+      return Response.json({ error: "Car not found" }, { status: 404 });
+    }
+
+    return Response.json({
+      success: true,
+      data: car,
+    });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+}
+
 // ================= UPDATE CAR =================
 export async function PUT(req, { params }) {
   await connectDB();
@@ -51,12 +71,12 @@ export async function PUT(req, { params }) {
       return Response.json({ error: "Fuel type required" }, { status: 400 });
     }
 
-    if (!updateData.description) {
-      return Response.json(
-        { error: "Description is required" },
-        { status: 400 },
-      );
-    }
+    // if (!updateData.description) {
+    //   return Response.json(
+    //     { error: "Description is required" },
+    //     { status: 400 },
+    //   );
+    // }
 
     if (!Array.isArray(updateData.images) || updateData.images.length === 0) {
       return Response.json(
@@ -71,8 +91,12 @@ export async function PUT(req, { params }) {
     }
 
     // ================= UPDATE =================
+    // const car = await Car.findByIdAndUpdate(params.id, updateData, {
+    //   new: true,
+    //   runValidators: true,
+    // });
     const car = await Car.findByIdAndUpdate(params.id, updateData, {
-      new: true,
+      returnDocument: "after", // ✅ replaces new: true
       runValidators: true,
     });
 

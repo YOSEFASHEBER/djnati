@@ -65,7 +65,7 @@ export default function CarsPage() {
         <div className="text-center mb-10">
           <span className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-1 text-sm font-medium text-red-600 mb-4">
             <CarFront className="w-4 h-4" />
-            Available Inventory
+            Inventory
           </span>
 
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900">

@@ -35,12 +35,12 @@ export default async function CarDetailPage({ params }) {
 
             <div
               className={`inline-block px-4 py-1 rounded-full font-semibold ${
-                car?.status
+                car?.status == "Available"
                   ? "bg-green-100 text-green-700"
                   : "bg-red-100 text-red-700"
               }`}
             >
-              {car.status ? "Available" : "Sold"}
+              {car.status}
             </div>
 
             <div className="bg-white border rounded-2xl p-5 shadow-sm">
@@ -54,22 +54,22 @@ export default async function CarDetailPage({ params }) {
               <h2 className="text-xl font-bold mb-4">Car Details</h2>
               <div className="grid grid-cols-2 gap-y-3 text-sm">
                 <p>
-                  <b>Brand:</b> {car.brand}
+                  <b>Brand:</b> {car?.brand}
                 </p>
                 <p>
-                  <b>Model:</b> {car.name}
+                  <b>Model:</b> {car?.name}
                 </p>
                 <p>
-                  <b>Year:</b> {car.year}
+                  <b>Year:</b> {car?.year}
                 </p>
                 <p>
-                  <b>Fuel:</b> {car.fuel}
+                  <b>Fuel:</b> {car?.fuelType}
                 </p>
                 <p>
-                  <b>Category:</b> {car.category}
+                  <b>Category:</b> {car?.category}
                 </p>
                 <p>
-                  <b>Transmission:</b> {car.transmission}
+                  <b>Transmission:</b> {car?.transmission}
                 </p>
               </div>
             </div>

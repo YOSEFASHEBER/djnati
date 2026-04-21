@@ -52,6 +52,7 @@ function Stat({ label, value, start }) {
 export default function Home() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [availableCars, setAvailableCars] = useState(0);
   const [animateStats, setAnimateStats] = useState(false);
 
   const statsRef = useRef(null);
@@ -78,11 +79,11 @@ export default function Home() {
       const res = await fetch("/api/cars?limit=6&page=1", {
         cache: "no-store",
       });
-
       const data = await res.json();
 
       if (data.success) {
         setCars(data.data);
+        setAvailableCars(data.stats.available);
       }
     } catch (err) {
       console.log(err);
@@ -102,7 +103,7 @@ export default function Home() {
         {/* BACKGROUND */}
         <div className="absolute inset-0 scale-105 animate-slowZoom">
           <Image
-            src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2025&auto=format&fit=crop"
+            src="https://res.cloudinary.com/dznmeumqb/image/upload/v1776802919/dj-nati-cars/bmrikyoquk5eebycuoio.png"
             alt="Cars hero"
             fill
             priority
@@ -165,7 +166,11 @@ export default function Home() {
             <Stat label="Cars Sold" value={200} start={animateStats} />
             <Stat label="Happy Clients" value={100} start={animateStats} />
             <Stat label="Years Experience" value={5} start={animateStats} />
-            <Stat label="Available Cars" value={20} start={animateStats} />
+            <Stat
+              label="Available Cars"
+              value={availableCars}
+              start={animateStats}
+            />
           </div>
         </div>
       </section>

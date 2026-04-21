@@ -3,6 +3,19 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+// ================= TOAST =================
+function Toast({ message, type }) {
+  return (
+    <div
+      className={`fixed top-5 right-5 px-5 py-3 rounded-xl shadow-lg text-white font-semibold z-50 animate-slide ${
+        type === "success" ? "bg-green-500" : "bg-red-500"
+      }`}
+    >
+      {message}
+    </div>
+  );
+}
+
 export default function EditCarPage({ params }) {
   const router = useRouter();
 
@@ -17,11 +30,30 @@ export default function EditCarPage({ params }) {
     mileage: "",
     description: "",
     images: [],
-    isAvailable: true,
+    status: "Available",
   });
 
   const [loading, setLoading] = useState(true);
-  const [preview, setPreview] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  // ================= VALIDATION =================
+  const isValid =
+    form.name.trim() &&
+    form.brand.trim() &&
+    form.price &&
+    !isNaN(Number(form.price)) &&
+    form.year &&
+    !isNaN(Number(form.year)) &&
+    form.description.trim() &&
+    form.images.length > 0;
+
+  // ================= TOAST FUNCTION =================
+  const showToast = (msg, type = "success") => {
+    setToast({ message: msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // ================= LOAD CAR =================
   useEffect(() => {
@@ -32,27 +64,21 @@ export default function EditCarPage({ params }) {
 
         const car = data.data;
 
-        if (car) {
-          setForm({
-            name: car.name || "",
-            brand: car.brand || "",
-            category: car.category || "Sedan",
-            price: car.price || "",
-            year: car.year || "",
-            fuelType: car.fuelType || "Petrol",
-            transmission: car.transmission || "Manual",
-            mileage: car.mileage || "",
-            description: car.description || "",
-            images: [],
-            isAvailable: car.isAvailable ?? true,
-          });
-
-          if (car.images) {
-            setPreview(car.images);
-          }
-        }
+        setForm({
+          name: car.name || "",
+          brand: car.brand || "",
+          category: car.category || "Sedan",
+          price: car.price || "",
+          year: car.year || "",
+          fuelType: car.fuelType || "Petrol",
+          transmission: car.transmission || "Manual",
+          mileage: car.mileage || "",
+          description: car.description || "",
+          images: car.images || [],
+          status: car.status || "Available",
+        });
       } catch (err) {
-        console.log(err);
+        showToast("Failed to load car", "error");
       } finally {
         setLoading(false);
       }
@@ -61,7 +87,7 @@ export default function EditCarPage({ params }) {
     fetchCar();
   }, [params.id]);
 
-  // ================= HANDLE INPUT =================
+  // ================= INPUT =================
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -71,49 +97,103 @@ export default function EditCarPage({ params }) {
     }));
   };
 
-  // ================= IMAGES =================
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-
+  // ================= REMOVE IMAGE =================
+  const handleRemoveImage = async (img) => {
     setForm((prev) => ({
       ...prev,
-      images: files,
+      images: prev.images.filter((image) => image.public_id !== img.public_id),
     }));
 
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setPreview(previews);
+    await fetch("/api/admin/delete-image", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ public_id: img.public_id }),
+    });
+  };
+
+  // ================= UPLOAD =================
+  const handleUpload = async (e) => {
+    const files = Array.from(e.target.files);
+
+    if (files.length > 10) {
+      showToast("Max 10 images allowed", "error");
+      return;
+    }
+
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+
+    setUploading(true);
+
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast("Upload failed", "error");
+        return;
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        images: [...prev.images, ...data.urls],
+      }));
+
+      showToast("Images uploaded");
+    } catch (err) {
+      showToast("Upload error", "error");
+    } finally {
+      setUploading(false);
+    }
   };
 
   // ================= UPDATE =================
   const updateCar = async () => {
-    const formData = new FormData();
+    if (!isValid || uploading) return;
 
-    Object.keys(form).forEach((key) => {
-      if (key === "images") {
-        form.images.forEach((img) => {
-          formData.append("images", img);
-        });
-      } else {
-        formData.append(key, form[key]);
+    setSaving(true);
+
+    try {
+      const res = await fetch(`/api/admin/cars/${params.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast(data.error || "Update failed", "error");
+        return;
       }
-    });
 
-    await fetch(`/api/cars/${params.id}`, {
-      method: "PUT",
-      body: formData,
-    });
+      showToast("Car updated successfully 🚀");
 
-    alert("Car updated successfully!");
-    router.push("/admin/cars");
+      setTimeout(() => {
+        router.push("/admin/cars");
+      }, 1200);
+    } catch (err) {
+      showToast("Something went wrong", "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) return <p className="p-6">Loading car...</p>;
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow border p-6 space-y-6">
+    <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow border p-6 space-y-6">
       <h1 className="text-3xl font-black">Edit Car</h1>
 
-      {/* GRID 1 */}
+      {/* BASIC INFO */}
       <div className="grid md:grid-cols-2 gap-4">
         <input
           name="name"
@@ -122,7 +202,6 @@ export default function EditCarPage({ params }) {
           className="input"
           placeholder="Car Name"
         />
-
         <input
           name="brand"
           value={form.brand}
@@ -132,7 +211,7 @@ export default function EditCarPage({ params }) {
         />
       </div>
 
-      {/* GRID 2 */}
+      {/* DETAILS */}
       <div className="grid md:grid-cols-3 gap-4">
         <select
           name="category"
@@ -153,7 +232,6 @@ export default function EditCarPage({ params }) {
           className="input"
           placeholder="Year"
         />
-
         <input
           name="mileage"
           value={form.mileage}
@@ -163,7 +241,7 @@ export default function EditCarPage({ params }) {
         />
       </div>
 
-      {/* GRID 3 */}
+      {/* PRICE + FUEL */}
       <div className="grid md:grid-cols-2 gap-4">
         <input
           name="price"
@@ -197,6 +275,18 @@ export default function EditCarPage({ params }) {
         <option>Automatic</option>
       </select>
 
+      {/* STATUS */}
+      <select
+        name="status"
+        value={form.status}
+        onChange={handleChange}
+        className="input"
+      >
+        <option>Available</option>
+        <option>Reserved</option>
+        <option>Sold</option>
+      </select>
+
       {/* DESCRIPTION */}
       <textarea
         name="description"
@@ -206,67 +296,72 @@ export default function EditCarPage({ params }) {
         placeholder="Description"
       />
 
-      {/* STATUS */}
-      <select
-        name="isAvailable"
-        value={form.status ? "true" : "false"}
-        onChange={(e) =>
-          setForm((prev) => ({
-            ...prev,
-            isAvailable: e.target.value === "true",
-          }))
-        }
-        className="input"
-      >
-        <option value="true">Available</option>
-        <option value="false">Sold</option>
-      </select>
+      {/* UPLOAD */}
+      <input type="file" multiple accept="image/*" onChange={handleUpload} />
+      {uploading && <p className="text-blue-500">Uploading...</p>}
 
       {/* IMAGES */}
-      <div className="space-y-3">
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={handleImageChange}
-          className="input"
-        />
-
-        {/* PREVIEW */}
-        {preview.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {preview.map((img, i) => (
+      {form.images.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {form.images.map((img, i) => (
+            <div key={i} className="relative">
               <img
-                key={i}
-                src={img}
+                src={img.url}
                 className="h-24 w-full object-cover rounded-lg border"
               />
-            ))}
-          </div>
-        )}
-      </div>
+              <button
+                onClick={() => handleRemoveImage(img)}
+                className="absolute top-1 right-1 bg-black text-white rounded-full px-2"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* UPDATE BUTTON */}
+      {/* BUTTON */}
       <button
         onClick={updateCar}
-        className="w-full bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600"
+        disabled={!isValid || uploading || saving}
+        className={`w-full py-3 rounded-xl font-bold transition ${
+          !isValid || uploading
+            ? "bg-gray-300 cursor-not-allowed"
+            : "bg-red-500 text-white hover:bg-red-600"
+        }`}
       >
-        Update Car
+        {saving ? "Updating..." : "Update Car"}
       </button>
 
-      {/* INPUT STYLE */}
+      {/* TOAST */}
+      {toast && <Toast message={toast.message} type={toast.type} />}
+
       <style jsx>{`
         .input {
           width: 100%;
           padding: 12px;
           border: 1px solid #e5e7eb;
           border-radius: 12px;
-          outline: none;
         }
 
         .input:focus {
           border-color: #ef4444;
           box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+        }
+
+        @keyframes slide {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-slide {
+          animation: slide 0.3s ease;
         }
       `}</style>
     </div>

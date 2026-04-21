@@ -46,17 +46,17 @@ export default function ContactPage() {
     {
       icon: Phone,
       title: "Phone",
-      value: "+251 900 000 000",
+      value: "+251 923708473",
     },
     {
       icon: Mail,
       title: "Email",
-      value: "info@djnaticars.com",
+      value: "djnaticars@gmail.com",
     },
     {
       icon: Clock,
       title: "Working Hours",
-      value: "Mon - Sat: 8:00 AM - 6:00 PM",
+      value: "Mon - Sat: 9:00 AM - 6:00 PM",
     },
   ];
 
@@ -107,7 +107,7 @@ export default function ContactPage() {
 
             {/* WhatsApp CTA */}
             <a
-              href="https://wa.me/251900000000"
+              href="https://wa.me/251923708473"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-3 bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-7 rounded-2xl transition-all shadow-lg"
@@ -150,7 +150,7 @@ export default function ContactPage() {
                 </label>
                 <input
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="Your Email"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })

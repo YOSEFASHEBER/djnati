@@ -4,136 +4,132 @@ import {
   FaInstagram,
   FaTiktok,
   FaWhatsapp,
-  FaTelegramPlane,
   FaTelegram,
+  FaTelegramPlane,
 } from "react-icons/fa";
 
 const Footer = () => {
+  const year = new Date().getFullYear();
+
   return (
-    <footer className="bg-slate-950 border-t border-slate-900 pt-16 pb-8 px-4 sm:px-6 lg:px-8">
+    <footer className="bg-gradient-to-b from-slate-950 to-black border-t border-slate-800 pt-16 pb-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-        {/* Brand + Social */}
+        {/* Brand */}
         <div>
           <div className="flex flex-col mb-4">
-            <span className="text-2xl font-black text-white">DJ NATI</span>
-            <span className="text-xs font-bold tracking-[0.4em] text-red-600 uppercase">
-              CARS
+            <span className="text-2xl font-black text-white tracking-wide">
+              DJ NATI
+            </span>
+            <span className="text-xs font-bold tracking-[0.4em] text-red-500 uppercase">
+              Cars
             </span>
           </div>
-          <p className="text-gray-500 text-sm leading-relaxed">
+
+          <p className="text-gray-400 text-sm leading-relaxed">
             Trusted marketplace for new and used cars in Addis Ababa.
           </p>
-          <div className="flex space-x-4 mt-4">
-            <Link
+
+          {/* Social */}
+          <div className="flex space-x-3 mt-5">
+            <SocialIcon
               href="https://web.facebook.com/profile.php?id=100068660768855"
-              target="_blank"
-              className="text-blue-600 text-lg"
-            >
-              <FaFacebookF />
-            </Link>
-            <Link
+              icon={<FaFacebookF />}
+              color="hover:bg-blue-600"
+            />
+            <SocialIcon
               href="https://t.me/NatiCarMarket"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white"
-            >
-              <FaTelegram />
-            </Link>
-            <Link
+              icon={<FaTelegram />}
+              color="hover:bg-sky-500"
+            />
+            <SocialIcon
               href="https://www.instagram.com/djnaticars/"
-              target="_blank"
-              className="text-pink-500 text-lg"
-            >
-              <FaInstagram />
-            </Link>
-            <Link
+              icon={<FaInstagram />}
+              color="hover:bg-pink-500"
+            />
+            <SocialIcon
               href="https://tiktok.com"
-              target="_blank"
-              className="bg-white p-1 rounded-full text-black text-lg"
-            >
-              <FaTiktok />
-            </Link>
+              icon={<FaTiktok />}
+              color="hover:bg-white hover:text-black"
+            />
           </div>
         </div>
 
-        {/* Navigation Links */}
+        {/* Navigation */}
         <div>
-          <h4 className="text-white font-bold mb-6 uppercase text-sm tracking-widest">
+          <h4 className="text-white font-semibold mb-6 text-sm tracking-widest uppercase">
             Navigation
           </h4>
-          <ul className="space-y-4 text-gray-500 text-sm">
+          <ul className="space-y-3 text-gray-400 text-sm">
             <li>
-              <Link
-                href="/cars"
-                className="hover:text-red-500 transition-colors"
-              >
+              <Link href="/cars" className="hover:text-red-500 transition">
                 Inventory
               </Link>
             </li>
             <li>
-              <Link
-                href="/sell"
-                className="hover:text-red-500 transition-colors"
-              >
-                Sell Your Car
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/contact"
-                className="hover:text-red-500 transition-colors"
-              >
+              <Link href="/contact" className="hover:text-red-500 transition">
                 Contact
               </Link>
             </li>
           </ul>
         </div>
 
-        {/* Contact Info */}
+        {/* Contact */}
         <div>
-          <h4 className="text-white font-bold mb-6 uppercase text-sm tracking-widest">
+          <h4 className="text-white font-semibold mb-6 text-sm tracking-widest uppercase">
             Visit Us
           </h4>
-          <p className="text-gray-500 text-sm mb-2">Addis Ababa, Ethiopia</p>
-          <p className="text-gray-500 text-sm mb-2">Phone: +251 931 429 999</p>
-          <p className="text-red-600 text-sm font-bold">
-            Open: Mon-Sat (9am - 6pm)
+          <p className="text-gray-400 text-sm mb-2">Addis Ababa, Ethiopia</p>
+          <p className="text-gray-400 text-sm mb-2">+251 931 429 999</p>
+          <p className="text-red-500 text-sm font-semibold">
+            Open: Mon–Sat (9am – 6pm)
           </p>
         </div>
 
-        {/* Chat Buttons */}
+        {/* Chat */}
         <div>
-          <h4 className="text-white font-bold mb-6 uppercase text-sm tracking-widest">
+          <h4 className="text-white font-semibold mb-6 text-sm tracking-widest uppercase">
             Chat With Us
           </h4>
-          <div className="flex flex-col space-y-4">
+
+          <div className="space-y-3">
             <a
-              href="https://wa.me/251900000000"
+              href="https://wa.me/251923708473"
               target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center px-4 py-2 bg-green-500 text-white font-bold rounded-md shadow"
+              className="flex items-center gap-2 px-4 py-2 rounded-md bg-green-500/90 hover:bg-green-500 text-white font-semibold transition"
             >
-              <FaWhatsapp className="mr-2" /> WhatsApp
+              <FaWhatsapp /> WhatsApp
             </a>
+
             <a
               href="https://t.me/@DjNaticars"
               target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center px-4 py-2 bg-blue-500 text-white font-bold rounded-md shadow"
+              className="flex items-center gap-2 px-4 py-2 rounded-md bg-blue-500/90 hover:bg-blue-500 text-white font-semibold transition"
             >
-              <FaTelegramPlane className="mr-2" /> Telegram
+              <FaTelegramPlane /> Telegram
             </a>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto border-t border-slate-900 pt-8 text-center">
-        <p className="text-gray-600 text-xs">
-          © 2026 DJ NATI CARS. All Rights Reserved.
+      {/* Bottom */}
+      <div className="max-w-7xl mx-auto border-t border-slate-800 pt-6 text-center">
+        <p className="text-gray-500 text-xs">
+          © {year} DJ NATI CARS. All Rights Reserved.
         </p>
       </div>
     </footer>
   );
 };
+
+/* Reusable Social Icon */
+const SocialIcon = ({ href, icon, color }) => (
+  <Link
+    href={href}
+    target="_blank"
+    className={`w-9 h-9 flex items-center justify-center rounded-full bg-slate-800 text-white transition ${color}`}
+  >
+    {icon}
+  </Link>
+);
 
 export default Footer;

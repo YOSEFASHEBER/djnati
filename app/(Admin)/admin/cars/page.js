@@ -2,24 +2,69 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { Pencil, Trash2, Plus } from "lucide-react";
+
+// ================= DELETE MODAL =================
+function DeleteModal({ open, onClose, onConfirm, loading }) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl p-6 w-[90%] max-w-md shadow-xl animate-scaleIn">
+        <h2 className="text-xl font-bold mb-2 text-red-600">Delete Car 🚨</h2>
+
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to delete this car? This action cannot be
+          undone.
+        </p>
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className={`px-4 py-2 rounded-lg text-white ${
+              loading ? "bg-red-300" : "bg-red-500 hover:bg-red-600"
+            }`}
+          >
+            {loading ? "Deleting..." : "Yes, Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminCarsPage() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchCars = async () => {
+  const [page, setPage] = useState(1);
+  const limit = 12;
+  const [totalPages, setTotalPages] = useState(1);
+
+  // ================= MODAL STATE =================
+  const [selectedCar, setSelectedCar] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // ================= FETCH =================
+  const fetchCars = async (pageNumber = 1) => {
     try {
       setLoading(true);
 
-      const res = await fetch("/api/cars", {
-        cache: "no-store",
-      });
-
+      const res = await fetch(`/api/cars?limit=${limit}&page=${pageNumber}`);
       const data = await res.json();
 
-      if (data.success) {
-        setCars(data.data);
-      }
+      setCars(data.data || []);
+      setTotalPages(Math.ceil(data.stats.total / limit) || 1);
+      setPage(pageNumber);
     } catch (err) {
       console.log(err);
     } finally {
@@ -28,79 +73,169 @@ export default function AdminCarsPage() {
   };
 
   useEffect(() => {
-    fetchCars();
+    fetchCars(1);
   }, []);
 
+  // ================= DELETE =================
+  const confirmDelete = async () => {
+    if (!selectedCar) return;
+
+    setDeleteLoading(true);
+
+    try {
+      await fetch(`/api/admin/cars/${selectedCar._id}`, {
+        method: "DELETE",
+      });
+
+      // Optimistic UI
+      setCars((prev) => prev.filter((car) => car._id !== selectedCar._id));
+
+      setSelectedCar(null);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // ================= STATUS STYLE =================
+  const getStatusStyle = (status) => {
+    if (status === "Available") return "bg-green-100 text-green-600";
+    if (status === "Reserved") return "bg-yellow-100 text-yellow-600";
+    return "bg-red-100 text-red-600";
+  };
+
   return (
-    <div>
+    <div className="p-6 space-y-6">
       {/* HEADER */}
-      <div className="flex justify-between mb-6">
-        <h1 className="text-3xl font-bold">Cars</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-black">Manage Cars</h1>
 
         <Link
           href="/admin/cars/new"
-          className="bg-black text-white px-4 py-2 rounded"
+          className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-xl hover:bg-red-600"
         >
-          + Add Car
+          <Plus size={18} />
+          Add Car
         </Link>
       </div>
 
-      {/* TABLE */}
-      <div className="bg-white rounded-xl shadow p-4 overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="text-left border-b">
-              <th className="p-2">Name</th>
-              <th className="p-2">Brand</th>
-              <th className="p-2">Price</th>
-              <th className="p-2">Status</th>
-              <th className="p-2">Actions</th>
-            </tr>
-          </thead>
+      {/* GRID */}
+      {loading ? (
+        <p>Loading...</p>
+      ) : cars.length === 0 ? (
+        <p>No cars found</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cars.map((car) => {
+            const image = car.images?.[0]?.url || "/placeholder.png";
 
-          <tbody>
-            {loading ? (
-              <tr>
-                <td className="p-4" colSpan="5">
-                  Loading...
-                </td>
-              </tr>
-            ) : cars.length === 0 ? (
-              <tr>
-                <td colSpan="5" className="p-4 text-center text-gray-500">
-                  No cars yet.
-                </td>
-              </tr>
-            ) : (
-              cars.map((car) => (
-                <tr key={car._id} className="border-b">
-                  <td className="p-2">{car.name}</td>
-                  <td className="p-2">{car.brand}</td>
-                  <td className="p-2">{car.price}</td>
-                  <td className="p-2">{car.status}</td>
+            return (
+              <div
+                key={car._id}
+                className="bg-white rounded-2xl shadow border overflow-hidden hover:shadow-lg transition"
+              >
+                {/* IMAGE */}
+                <div className="relative h-52 w-full">
+                  <Image
+                    src={image}
+                    alt={car.name}
+                    fill
+                    className="object-cover"
+                  />
 
-                  {/* ACTIONS */}
-                  <td className="p-2 flex gap-2">
-                    <Link
-                      href={`/admin/cars/${car._id}`}
-                      className="bg-blue-500 text-white px-3 py-1 rounded"
-                    >
-                      Edit
-                    </Link>
+                  <span
+                    className={`absolute top-3 right-3 text-xs px-2 py-1 rounded-full font-semibold ${getStatusStyle(
+                      car.status,
+                    )}`}
+                  >
+                    {car.status}
+                  </span>
+                </div>
 
-                    <button
-                      className="bg-red-500 text-white px-3 py-1 rounded"
-                      onClick={() => console.log("delete", car._id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                {/* CONTENT */}
+                <div className="p-4 space-y-2">
+                  <h2 className="font-bold text-lg">{car.name}</h2>
+                  <p className="text-sm text-gray-500">
+                    {car.brand} • {car.year}
+                  </p>
+                  <p className="text-red-500 font-bold">
+                    {car.price.toLocaleString()} ETB
+                  </p>
+                </div>
+
+                {/* ACTIONS */}
+                <div className="flex border-t">
+                  <Link
+                    href={`/admin/cars/${car._id}`}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 text-blue-600 hover:bg-blue-50"
+                  >
+                    <Pencil size={18} />
+                    Update
+                  </Link>
+
+                  <button
+                    onClick={() => setSelectedCar(car)}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 text-red-600 hover:bg-red-50 border-l"
+                  >
+                    <Trash2 size={18} />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* PAGINATION */}
+      <div className="flex items-center justify-between pt-4">
+        <button
+          onClick={() => fetchCars(page - 1)}
+          disabled={page === 1}
+          className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-40"
+        >
+          Previous
+        </button>
+
+        <div className="text-sm font-semibold">
+          Page {page} of {totalPages}
+        </div>
+
+        <button
+          onClick={() => fetchCars(page + 1)}
+          disabled={page === totalPages}
+          className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-40"
+        >
+          Next
+        </button>
       </div>
+
+      {/* DELETE MODAL */}
+      <DeleteModal
+        open={!!selectedCar}
+        onClose={() => setSelectedCar(null)}
+        onConfirm={confirmDelete}
+        loading={deleteLoading}
+      />
+
+      {/* ANIMATION */}
+      <style jsx>{`
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .animate-scaleIn {
+          animation: scaleIn 0.2s ease;
+        }
+      `}</style>
     </div>
   );
 }

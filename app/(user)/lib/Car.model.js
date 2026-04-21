@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
 
+const imageSchema = new mongoose.Schema({
+  url: String,
+  public_id: String,
+});
+
 const CarSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -7,7 +12,7 @@ const CarSchema = new mongoose.Schema(
 
     category: {
       type: String,
-      enum: ["Sedan", "SUV", "Hatchback", "Truck"],
+      enum: ["Sedan", "SUV", "Hatchback", "Truck", "Van"],
       required: true,
     },
 
@@ -28,7 +33,7 @@ const CarSchema = new mongoose.Schema(
 
     mileage: Number,
 
-    images: [String],
+    images: [imageSchema],
 
     description: String,
 
