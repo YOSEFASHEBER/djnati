@@ -75,10 +75,11 @@ export default function Home() {
   const fetchLatestCars = async () => {
     try {
       setLoading(true);
-
+      console.log("start fetch car");
       const res = await fetch("/api/cars?limit=6&page=1", {
         cache: "no-store",
       });
+      console.log("after fetch car");
       const data = await res.json();
 
       if (data.success) {

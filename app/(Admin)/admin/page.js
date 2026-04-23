@@ -15,31 +15,38 @@ import {
 export default function AdminCarsPage() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [stats, setStats] = useState({
     total: 0,
-    filteredTotal: 0,
     available: 0,
     sold: 0,
     reserved: 0,
   });
+
   const [page, setPage] = useState(1);
   const limit = 10;
   const [totalPages, setTotalPages] = useState(1);
 
+  // ================= FETCH =================
   const fetchCars = async (pageNumber = 1) => {
     try {
       setLoading(true);
 
-      const res = await fetch(`/api/cars?limit=${limit}&page=${pageNumber}`);
+      const res = await fetch("/api/admin/cars", {
+        credentials: "include",
+      });
+
       const data = await res.json();
-      console.log(data.stats.total);
+
+      if (!res.ok) throw new Error(data.error);
 
       setCars(data.data || []);
       setStats(data.stats || {});
-      setTotalPages(Math.ceil(data.stats.total / limit) || 1);
+      setTotalPages(data.pagination?.totalPages || 1);
       setPage(pageNumber);
     } catch (err) {
-      console.log(err);
+      console.error(err);
+      alert("Failed to fetch cars");
     } finally {
       setLoading(false);
     }
@@ -49,80 +56,59 @@ export default function AdminCarsPage() {
     fetchCars(1);
   }, []);
 
+  // ================= DELETE =================
   const deleteCar = async (id) => {
-    if (!confirm("Delete this car?")) return;
+    const ok = confirm("Delete this car?");
+    if (!ok) return;
 
-    await fetch(`/api/admin/cars/${id}`, { method: "DELETE" });
+    try {
+      const res = await fetch(`/api/admin/cars/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
-    setCars((prev) => prev.filter((car) => car._id !== id));
+      if (!res.ok) throw new Error("Delete failed");
+
+      // Optimistic UI
+      setCars((prev) => prev.filter((c) => c._id !== id));
+
+      // Optional: refresh stats after delete
+      fetchCars(page);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete");
+    }
   };
-
-  // ================= DASHBOARD STATS =================
-  // const totalCars = cars.length;
-  // const available = cars.filter((c) => c.status === "Available").length;
-  // const sold = cars.filter((c) => c.status === "Sold").length;
-  // const reserved = cars.filter((c) => c.status === "Reserved").length;
 
   return (
     <div className="space-y-6">
-      {/* ================= HEADER ================= */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-black">DJ Nati Dashboard</h1>
-          <p className="text-gray-500 text-sm">Manage your car inventory</p>
-        </div>
+      {/* HEADER */}
+      <Header />
 
-        <Link
-          href="/admin/cars/new"
-          className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl hover:bg-gray-800"
-        >
-          <Plus size={18} />
-          Add Car
-        </Link>
-      </div>
-
-      {/* ================= KPI CARDS ================= */}
+      {/* KPI */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl shadow border">
-          <div className="flex items-center justify-between">
-            <Car className="text-gray-500" />
-            <span className="text-2xl font-bold">{stats.total}</span>
-          </div>
-          <p className="text-gray-500 text-sm mt-2">Total Cars</p>
-        </div>
-
-        <div className="bg-green-50 p-4 rounded-2xl border">
-          <div className="flex items-center justify-between">
-            <CheckCircle className="text-green-600" />
-            <span className="text-2xl font-bold text-green-700">
-              {stats.available}
-            </span>
-          </div>
-          <p className="text-green-600 text-sm mt-2">Available</p>
-        </div>
-
-        <div className="bg-red-50 p-4 rounded-2xl border">
-          <div className="flex items-center justify-between">
-            <XCircle className="text-red-600" />
-            <span className="text-2xl font-bold text-red-700">
-              {stats.sold}
-            </span>
-          </div>
-          <p className="text-red-600 text-sm mt-2">Sold</p>
-        </div>
-
-        <div className="bg-yellow-50 p-4 rounded-2xl border">
-          <div className="flex items-center justify-between">
-            <Clock className="text-yellow-600" />
-            <span className="text-2xl font-bold text-yellow-700">
-              {stats.reserved}
-            </span>
-          </div>
-          <p className="text-yellow-600 text-sm mt-2">Reserved</p>
-        </div>
+        <StatCard icon={<Car />} label="Total Cars" value={stats.total} />
+        <StatCard
+          icon={<CheckCircle />}
+          label="Available"
+          value={stats.available}
+          color="green"
+        />
+        <StatCard
+          icon={<XCircle />}
+          label="Sold"
+          value={stats.sold}
+          color="red"
+        />
+        <StatCard
+          icon={<Clock />}
+          label="Reserved"
+          value={stats.reserved}
+          color="yellow"
+        />
       </div>
 
-      {/* ================= TABLE ================= */}
+      {/* TABLE */}
       <div className="bg-white rounded-2xl shadow border overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-sm text-gray-600">
@@ -138,31 +124,19 @@ export default function AdminCarsPage() {
 
           <tbody>
             {loading ? (
-              <tr>
-                <td className="p-4" colSpan="6">
-                  Loading...
-                </td>
-              </tr>
+              <TableLoading />
+            ) : cars.length === 0 ? (
+              <TableEmpty />
             ) : (
               cars.map((car) => (
                 <tr key={car._id} className="border-t hover:bg-gray-50">
                   <td className="p-4 font-semibold">{car.name}</td>
                   <td>{car.brand}</td>
                   <td>{car.year}</td>
-                  <td>{car.price} ETB</td>
+                  <td>{car.price.toLocaleString()} ETB</td>
 
                   <td>
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full ${
-                        car.status === "Available"
-                          ? "bg-green-100 text-green-600"
-                          : car.status === "Reserved"
-                            ? "bg-yellow-100 text-yellow-600"
-                            : "bg-red-100 text-red-600"
-                      }`}
-                    >
-                      {car.status}
-                    </span>
+                    <StatusBadge status={car.status} />
                   </td>
 
                   <td className="p-4">
@@ -189,28 +163,118 @@ export default function AdminCarsPage() {
         </table>
       </div>
 
-      {/* ================= PAGINATION ================= */}
-      <div className="flex items-center justify-between pt-4">
-        <button
-          onClick={() => fetchCars(page - 1)}
-          disabled={page === 1}
-          className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-40"
-        >
-          Previous
-        </button>
+      {/* PAGINATION */}
+      <Pagination page={page} totalPages={totalPages} onChange={fetchCars} />
+    </div>
+  );
+}
 
-        <div className="text-sm font-semibold">
-          Page {page} of {totalPages}
-        </div>
+//
+// ================= COMPONENTS =================
+//
 
-        <button
-          onClick={() => fetchCars(page + 1)}
-          disabled={page === totalPages}
-          className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-40"
-        >
-          Next
-        </button>
+function Header() {
+  return (
+    <div className="flex justify-between items-center">
+      <div>
+        <h1 className="text-3xl font-black">DJ Nati Dashboard</h1>
+        <p className="text-gray-500 text-sm">Manage your car inventory</p>
       </div>
+
+      <Link
+        href="/admin/cars/new"
+        className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl hover:bg-gray-800"
+      >
+        <Plus size={18} />
+        Add Car
+      </Link>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, color = "gray" }) {
+  const styles = {
+    gray: "bg-white",
+    green: "bg-green-50 text-green-700",
+    red: "bg-red-50 text-red-700",
+    yellow: "bg-yellow-50 text-yellow-700",
+  };
+
+  return (
+    <div className={`p-4 rounded-2xl border ${styles[color]}`}>
+      <div className="flex items-center justify-between">
+        {icon}
+        <span className="text-2xl font-bold">{value}</span>
+      </div>
+      <p className="text-sm mt-2">{label}</p>
+    </div>
+  );
+}
+
+function StatusBadge({ status }) {
+  if (status === "Available")
+    return (
+      <span className="bg-green-100 text-green-600 px-2 py-1 rounded text-xs">
+        Available
+      </span>
+    );
+
+  if (status === "Reserved")
+    return (
+      <span className="bg-yellow-100 text-yellow-600 px-2 py-1 rounded text-xs">
+        Reserved
+      </span>
+    );
+
+  return (
+    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs">
+      Sold
+    </span>
+  );
+}
+
+function TableLoading() {
+  return (
+    <tr>
+      <td colSpan="6" className="p-6 text-center text-gray-500">
+        Loading cars...
+      </td>
+    </tr>
+  );
+}
+
+function TableEmpty() {
+  return (
+    <tr>
+      <td colSpan="6" className="p-6 text-center text-gray-500">
+        No cars found
+      </td>
+    </tr>
+  );
+}
+
+function Pagination({ page, totalPages, onChange }) {
+  return (
+    <div className="flex items-center justify-between pt-4">
+      <button
+        onClick={() => onChange(page - 1)}
+        disabled={page === 1}
+        className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-40"
+      >
+        Previous
+      </button>
+
+      <div className="text-sm font-semibold">
+        Page {page} of {totalPages}
+      </div>
+
+      <button
+        onClick={() => onChange(page + 1)}
+        disabled={page === totalPages}
+        className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-40"
+      >
+        Next
+      </button>
     </div>
   );
 }

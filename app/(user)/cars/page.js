@@ -69,7 +69,7 @@ export default function CarsPage() {
           </span>
 
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900">
-            Explore Premium Cars
+            Explore Our Cars
           </h1>
 
           <p className="text-slate-600 mt-3 max-w-2xl mx-auto">
@@ -117,6 +117,7 @@ export default function CarsPage() {
               <option value="Sedan">Sedan</option>
               <option value="Hatchback">Hatchback</option>
               <option value="Truck">Truck</option>
+              <option value="Van">Van</option>
             </select>
 
             <input
@@ -172,6 +173,7 @@ export default function CarsPage() {
                 <option value="Sedan">Sedan</option>
                 <option value="Hatchback">Hatchback</option>
                 <option value="Truck">Truck</option>
+                <option value="Van">Van</option>
               </select>
 
               <input

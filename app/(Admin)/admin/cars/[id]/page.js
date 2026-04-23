@@ -57,6 +57,18 @@ export default function EditCarPage({ params }) {
 
   // ================= LOAD CAR =================
   useEffect(() => {
+    const checkAuth = async () => {
+      const res = await fetch("/api/admin/check", {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        window.location.href = "/login";
+      }
+    };
+
+    checkAuth();
+
     const fetchCar = async () => {
       try {
         const res = await fetch(`/api/admin/cars/${params.id}`);

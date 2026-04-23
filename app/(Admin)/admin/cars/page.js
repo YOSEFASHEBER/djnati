@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, LogOut } from "lucide-react";
 
 // ================= DELETE MODAL =================
 function DeleteModal({ open, onClose, onConfirm, loading }) {
@@ -50,6 +50,19 @@ export default function AdminCarsPage() {
   const limit = 12;
   const [totalPages, setTotalPages] = useState(1);
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", {
+        method: "POST",
+        credentials: "include", // 🔥 important
+      });
+
+      window.location.href = "/login";
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   // ================= MODAL STATE =================
   const [selectedCar, setSelectedCar] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -85,6 +98,7 @@ export default function AdminCarsPage() {
     try {
       await fetch(`/api/admin/cars/${selectedCar._id}`, {
         method: "DELETE",
+        credentials: "include", // 🔥 VERY IMPORTANT
       });
 
       // Optimistic UI
@@ -109,7 +123,17 @@ export default function AdminCarsPage() {
     <div className="p-6 space-y-6">
       {/* HEADER */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-black">Manage Cars</h1>
+        <div className="flex justify-between items-center">
+          {/* <h1 className="text-2xl font-black">Manage Cars</h1> */}
+
+          {/* <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-xl hover:bg-black transition"
+          >
+            <LogOut size={18} />
+            Logout
+          </button> */}
+        </div>
 
         <Link
           href="/admin/cars/new"

@@ -1,11 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutDashboard, Car, PlusCircle, Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  LayoutDashboard,
+  Car,
+  PlusCircle,
+  Menu,
+  X,
+  LogOut,
+} from "lucide-react";
 
 export default function AdminLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
 
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, href: "/admin" },
@@ -13,22 +22,47 @@ export default function AdminLayout({ children }) {
     { label: "Add Car", icon: PlusCircle, href: "/admin/cars/new" },
   ];
 
+  // ================= LOGOUT =================
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+      });
+
+      router.push("/login");
+    } catch (err) {
+      console.log("Logout failed:", err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 flex flex-col">
       {/* TOP BAR */}
       <header className="h-16 bg-white/80 backdrop-blur-md border-b flex items-center justify-between px-4 shadow-sm">
         <h1 className="font-bold text-lg text-slate-800">DJ NATI Admin</h1>
 
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-2 rounded-lg bg-slate-900 text-white"
-        >
-          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Logout Button */}
+          {/* <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+          >
+            <LogOut size={16} />
+            Logout
+          </button> */}
+
+          {/* Mobile Menu */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-2 rounded-lg bg-slate-900 text-white"
+          >
+            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-1">
-        {/* SIDEBAR (DESKTOP) */}
+        {/* SIDEBAR */}
         <aside
           className={`hidden md:flex flex-col transition-all duration-300
           ${collapsed ? "w-20" : "w-64"}
@@ -56,6 +90,14 @@ export default function AdminLayout({ children }) {
                 )}
               </a>
             ))}
+            <button
+              onClick={handleLogout}
+              // className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-700 hover:bg-red-500 hover:text-white transition"
+            >
+              <LogOut size={16} />
+              {!collapsed && "Logout"}
+            </button>
           </nav>
         </aside>
 
@@ -73,6 +115,15 @@ export default function AdminLayout({ children }) {
                   <span>{item.label}</span>
                 </a>
               ))}
+
+              {/* Logout in mobile */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 p-3 rounded-lg bg-red-500 text-white"
+              >
+                <LogOut size={18} />
+                Logout
+              </button>
             </div>
           </div>
         )}

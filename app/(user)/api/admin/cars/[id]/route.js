@@ -1,5 +1,6 @@
 import { connectDB } from "@/app/(user)/lib/mongodb";
 import Car from "@/app/(user)/lib/Car.model";
+import cloudinary from "@/app/(user)/lib/cloudinary";
 
 // ✅ Allowed enum
 const STATUS_ENUM = ["Available", "Sold", "Reserved"];
@@ -91,10 +92,7 @@ export async function PUT(req, { params }) {
     }
 
     // ================= UPDATE =================
-    // const car = await Car.findByIdAndUpdate(params.id, updateData, {
-    //   new: true,
-    //   runValidators: true,
-    // });
+
     const car = await Car.findByIdAndUpdate(params.id, updateData, {
       returnDocument: "after", // ✅ replaces new: true
       runValidators: true,
@@ -113,19 +111,31 @@ export async function PUT(req, { params }) {
   }
 }
 
-// ---- Delete cars ----
 export async function DELETE(req, { params }) {
   await connectDB();
 
   try {
-    const car = await Car.findByIdAndDelete(params.id);
+    const car = await Car.findById(params.id);
 
     if (!car) {
-      return Response.json({ error: "Car not found" }, { status: 404 });
+      return NextResponse.json({ error: "Car not found" }, { status: 404 });
     }
 
-    return Response.json({ success: true });
+    // 🔥 Delete images from Cloudinary
+    if (car.images && car.images.length > 0) {
+      const deletePromises = car.images.map((img) =>
+        cloudinary.uploader.destroy(img.public_id),
+      );
+
+      await Promise.all(deletePromises);
+    }
+
+    // 🔥 Delete car from DB
+    await Car.findByIdAndDelete(params.id);
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

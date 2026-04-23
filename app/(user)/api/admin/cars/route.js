@@ -5,10 +5,51 @@ const STATUS_ENUM = ["Available", "Sold", "Reserved"];
 
 const sanitize = (v) => (typeof v === "string" ? v.trim() : v);
 
-export async function POST(req) {
+// ================= GET ALL CARS (ADMIN) =================
+export async function GET(req) {
   await connectDB();
 
   try {
+    const { searchParams } = new URL(req.url);
+
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
+    const skip = (page - 1) * limit;
+
+    const [cars, total, available, sold, reserved] = await Promise.all([
+      Car.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+
+      Car.countDocuments(),
+      Car.countDocuments({ status: "Available" }),
+      Car.countDocuments({ status: "Sold" }),
+      Car.countDocuments({ status: "Reserved" }),
+    ]);
+
+    return Response.json({
+      success: true,
+      data: cars,
+      stats: { total, available, sold, reserved },
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (err) {
+    return Response.json({ error: "Failed to fetch cars" }, { status: 500 });
+  }
+}
+// ================= CREATE CAR (ADMIN) =================
+export async function POST(req) {
+  const auth = verifyAdmin(req);
+  if (auth.error) {
+    return Response.json({ error: auth.error }, { status: auth.status });
+  }
+
+  try {
+    await connectDB();
+
     const body = await req.json();
 
     const newCar = {
@@ -38,10 +79,10 @@ export async function POST(req) {
     if (!newCar.transmission)
       return Response.json({ error: "Transmission required" }, { status: 400 });
 
-    if (!newCar.year || isNaN(newCar.year))
+    if (isNaN(newCar.year))
       return Response.json({ error: "Valid year required" }, { status: 400 });
 
-    if (!newCar.price || isNaN(newCar.price))
+    if (isNaN(newCar.price))
       return Response.json({ error: "Valid price required" }, { status: 400 });
 
     if (!newCar.fuelType)
@@ -51,9 +92,13 @@ export async function POST(req) {
       return Response.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    if (!Array.isArray(newCar.images) || newCar.images.length === 0) {
+    if (
+      !Array.isArray(newCar.images) ||
+      newCar.images.length === 0 ||
+      !newCar.images.every((img) => img?.url && img?.public_id)
+    ) {
       return Response.json(
-        { error: "At least one image required" },
+        { error: "Images must include url and public_id" },
         { status: 400 },
       );
     }
@@ -65,7 +110,7 @@ export async function POST(req) {
       data: car,
     });
   } catch (error) {
-    console.log(error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("POST /admin/cars error:", error);
+    return Response.json({ error: "Failed to create car" }, { status: 500 });
   }
 }
