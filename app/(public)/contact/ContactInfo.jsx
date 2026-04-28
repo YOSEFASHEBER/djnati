@@ -5,12 +5,12 @@ export default function ContactInfo() {
     {
       icon: MapPin,
       title: "Address",
-      value: "Addis Ababa, Ethiopia",
+      value: "Addis Ababa, meskel flower behind tulip hottel",
     },
     {
       icon: Phone,
       title: "Phone",
-      value: "+251 923708473",
+      value: "+251 923708473 , +251 931429999",
     },
     {
       icon: Mail,

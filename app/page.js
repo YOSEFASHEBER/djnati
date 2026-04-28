@@ -9,23 +9,51 @@ export const metadata = {
     "Browse verified cars in Ethiopia with transparent pricing and trusted sellers.",
 };
 
+// ================= SAFE DATA FETCH =================
 async function getLatestCars() {
-  await connectDB();
+  try {
+    await connectDB();
 
-  const cars = await Car.find({}).sort({ createdAt: -1 }).limit(6).lean();
+    const cars = await Car.find({}).sort({ createdAt: -1 }).limit(6).lean();
 
-  const availableCars = await Car.countDocuments();
+    const availableCars = await Car.countDocuments();
 
-  return { cars, availableCars };
+    return {
+      cars,
+      availableCars,
+      error: null,
+    };
+  } catch (error) {
+    console.error("❌ DB Error in getLatestCars:", error);
+
+    return {
+      cars: [],
+      availableCars: 0,
+      error: "Failed to load cars. Please try again later.",
+    };
+  }
 }
 
+// ================= PAGE =================
 export default async function HomePage() {
-  const { cars, availableCars } = await getLatestCars();
+  const { cars, availableCars, error } = await getLatestCars();
 
   return (
     <main className="bg-white text-slate-900 overflow-x-hidden">
+      {/* ================= HERO ================= */}
       <HeroSection availableCars={availableCars} />
-      <LatestCars cars={cars} />
+
+      {/* ================= ERROR STATE (SAFE UI) ================= */}
+      {error ? (
+        <div className="max-w-6xl mx-auto px-4 py-10">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl">
+            <h2 className="font-semibold text-lg">Something went wrong</h2>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        </div>
+      ) : (
+        <LatestCars cars={cars} />
+      )}
     </main>
   );
 }

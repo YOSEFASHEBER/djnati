@@ -159,7 +159,7 @@ export default function AdminCarsPage() {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      {/* <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
             <tr>
@@ -219,6 +219,74 @@ export default function AdminCarsPage() {
             )}
           </tbody>
         </table>
+      </div> */}
+      {/* TABLE */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="w-full overflow-x-auto">
+          <table className="min-w-[750px] w-full text-sm">
+            <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
+              <tr>
+                <th className="px-6 py-4 text-left">Car</th>
+                <th className="px-6 py-4 text-left">Brand</th>
+                <th className="px-6 py-4 text-left">Year</th>
+                <th className="px-6 py-4 text-left">Price</th>
+                <th className="px-6 py-4 text-left">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-10 text-slate-600">
+                    Loading cars...
+                  </td>
+                </tr>
+              ) : (
+                cars.map((car) => (
+                  <tr
+                    key={car.slug}
+                    className="hover:bg-gray-50 transition text-slate-600"
+                  >
+                    <td className="px-6 py-4 font-semibold">
+                      {car.name?.toUpperCase()}
+                    </td>
+
+                    <td className="px-6 py-4">{car.brand?.toUpperCase()}</td>
+
+                    <td className="px-6 py-4">{car.year}</td>
+
+                    <td className="px-6 py-4 font-medium">
+                      {car.price?.toLocaleString()} ETB
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <StatusBadge status={car.status} />
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="flex justify-end gap-4">
+                        <Link
+                          href={`/admin/cars/${car.slug}`}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <Pencil size={18} />
+                        </Link>
+
+                        <button
+                          onClick={() => setDeleteSlug(car.slug)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

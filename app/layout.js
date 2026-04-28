@@ -1,6 +1,7 @@
 import "./globals.css";
 import ConditionalNavbar from "@/components/ConditionalNavBar";
 import ConditionalFooter from "@/components/ConditionalFooter";
+import FloatingContact from "./(public)/contact/FloatingContact";
 
 export const metadata = {
   title: {
@@ -17,7 +18,10 @@ export default function RootLayout({ children }) {
       <body className="bg-white text-slate-900 antialiased">
         <ConditionalNavbar />
 
-        <main>{children}</main>
+        <main>
+          {children}
+          <FloatingContact />
+        </main>
 
         <ConditionalFooter />
       </body>
